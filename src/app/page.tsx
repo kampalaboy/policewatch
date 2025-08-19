@@ -89,6 +89,7 @@ type Screen =
 
 export default function Home() {
   const { user, loading, signOutUser } = useAuth();
+  const [badgeNumber, setBadgeNumber] = useState<string>("");
   const [incidents, setIncidents] = useState<Report[]>([]);
   const [currentScreen, setCurrentScreen] = useState<Screen>("login");
   const [selectedReportId, setSelectedReportId] = useState<string>("");
@@ -96,7 +97,7 @@ export default function Home() {
 
   const officerInfo = {
     name: user?.displayName || "Officer",
-    badgeNumber: user?.badgeNumber || "Unknown",
+    badgeNumber: badgeNumber || "Unknown",
     station: "Kampala Central Police Station",
     district: "Kampala Central Division",
   };
@@ -106,7 +107,7 @@ export default function Home() {
     if (loading) return; // Still loading auth state
 
     if (user && user.role === "officer") {
-      setCurrentScreen("dashboard");
+      setCurrentScreen("citizen-view");
     } else if (user && user.role === "citizen") {
       setCurrentScreen("citizen-view");
     } else {
@@ -120,6 +121,7 @@ export default function Home() {
   }) => {
     // Authentication is now handled by the OfficerLogin component
     // The auth state will automatically update when login is successful
+    setBadgeNumber(credentials.badgeNumber);
     console.log("Login attempted with badge:", credentials.badgeNumber);
   };
 
