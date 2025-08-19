@@ -1,63 +1,85 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { IncidentReport } from '@/types/incident';
-import { dummyIncidents, generateMoreIncidents } from '@/data/dummyIncidents';
-import IncidentCard from './IncidentCard';
+import { useState, useEffect, useCallback } from "react";
+import { Report } from "@/lib/reports";
+import { fetchReports } from "@/lib/reports";
+import IncidentCard from "./IncidentCard";
 
 interface MainFeedProps {
   className?: string;
-  incidents?: IncidentReport[];
+  incidents?: Report[];
 }
 
-export default function MainFeed({ className = '', incidents: initialIncidents = [] }: MainFeedProps) {
-  const [incidents, setIncidents] = useState<IncidentReport[]>(initialIncidents);
+export default function MainFeed({
+  className = "",
+  incidents: initialIncidents = [],
+}: MainFeedProps) {
+  const [incidents, setIncidents] = useState<Report[]>(initialIncidents);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  const [lastDocument, setLastDocument] = useState<any>(null);
 
-  // Update incidents when prop changes
+  // Load initial incidents from Firestore
   useEffect(() => {
-    if (initialIncidents.length > 0) {
-      setIncidents(initialIncidents);
-      setPage(1);
-    }
+    const loadInitialIncidents = async () => {
+      if (initialIncidents.length > 0) {
+        setIncidents(initialIncidents);
+        setPage(1);
+      } else {
+        setLoading(true);
+        try {
+          const { reports, lastDoc } = await fetchReports(10);
+          setIncidents(reports);
+          setLastDocument(lastDoc);
+          setPage(1);
+        } catch (error) {
+          console.error("Error loading initial incidents:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadInitialIncidents();
   }, [initialIncidents]);
 
-  // Simulate API call to load more incidents
+  // Load more incidents from Firestore
   const loadMoreIncidents = useCallback(async () => {
     if (loading || !hasMore) return;
 
     setLoading(true);
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const startId = dummyIncidents.length + (page - 1) * 10 + 1;
-    const newIncidents = generateMoreIncidents(startId, 10);
-    
-    setIncidents(prev => [...prev, ...newIncidents]);
-    setPage(prev => prev + 1);
-    
-    // Stop loading more after 5 pages (50 additional items)
-    if (page >= 5) {
-      setHasMore(false);
+
+    try {
+      const { reports, lastDoc } = await fetchReports(10, lastDocument);
+
+      if (reports.length === 0) {
+        setHasMore(false);
+      } else {
+        setIncidents((prev) => [...prev, ...reports]);
+        setLastDocument(lastDoc);
+        setPage((prev) => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error loading more incidents:", error);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
-  }, [loading, hasMore, page]);
+  }, [loading, hasMore, lastDocument]);
 
   // Infinite scroll handler
   useEffect(() => {
     const handleScroll = () => {
-      if (window.innerHeight + document.documentElement.scrollTop 
-          >= document.documentElement.offsetHeight - 1000) {
+      if (
+        window.innerHeight + document.documentElement.scrollTop >=
+        document.documentElement.offsetHeight - 1000
+      ) {
         loadMoreIncidents();
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [loadMoreIncidents]);
 
   return (
@@ -80,7 +102,9 @@ export default function MainFeed({ className = '', incidents: initialIncidents =
       {/* End of Feed Message */}
       {!hasMore && !loading && (
         <div className="text-center py-8">
-          <div className="text-gray-500 mb-2">You've reached the end of the feed</div>
+          <div className="text-gray-500 mb-2">
+            You&apos;ve reached the end of the feed
+          </div>
           <div className="text-sm text-gray-400">
             Showing {incidents.length} incident reports
           </div>
@@ -91,8 +115,12 @@ export default function MainFeed({ className = '', incidents: initialIncidents =
       {incidents.length === 0 && !loading && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📋</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No incident reports</h3>
-          <p className="text-gray-500">New reports from CitizenWatch will appear here.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No incident reports
+          </h3>
+          <p className="text-gray-500">
+            New reports from CitizenWatch will appear here.
+          </p>
         </div>
       )}
     </div>
