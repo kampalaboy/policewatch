@@ -96,7 +96,7 @@ export default function Home() {
 
   const officerInfo = {
     name: user?.displayName || "Officer",
-    badgeNumber: user?.uid || "Unknown",
+    badgeNumber: user?.badgeNumber || "Unknown",
     station: "Kampala Central Police Station",
     district: "Kampala Central Division",
   };

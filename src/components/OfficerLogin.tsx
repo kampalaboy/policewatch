@@ -43,7 +43,7 @@ export default function OfficerLogin({ onLogin }: OfficerLoginProps) {
         <div className="text-center mb-8">
           <div className="mx-auto w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg">
             <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">P</span>
+              <span className="font-bold text-xl">P</span>
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">PoliceWatch</h1>
@@ -51,7 +51,7 @@ export default function OfficerLogin({ onLogin }: OfficerLoginProps) {
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white text-gray-900 rounded-2xl shadow-2xl p-8">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Welcome Back
@@ -116,7 +116,7 @@ export default function OfficerLogin({ onLogin }: OfficerLoginProps) {
                   required
                   value={badgeNumber}
                   onChange={(e) => setBadgeNumber(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-400"
                   placeholder="Enter your badge number"
                 />
               </div>
@@ -152,7 +152,7 @@ export default function OfficerLogin({ onLogin }: OfficerLoginProps) {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-400"
                   placeholder="Enter your password"
                 />
                 <button

@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Report } from "@/lib/reports";
+import { useAuth } from "@/lib/auth";
+import { getFirebaseClients } from "@/lib/firebase";
+import { collection, getDocs, limit, query, where } from "firebase/firestore";
 
 interface OfficerDashboardProps {
   incidents: Report[];
@@ -28,6 +31,39 @@ export default function OfficerDashboard({
   onSignOut,
 }: OfficerDashboardProps) {
   const [selectedPeriod, setSelectedPeriod] = useState("today");
+  const { user } = useAuth();
+  const [resolvedBadgeNumber, setResolvedBadgeNumber] = useState<string>(
+    officerInfo.badgeNumber
+  );
+
+  useEffect(() => {
+    const fetchBadgeFromIndex = async () => {
+      try {
+        // If already provided, keep it
+        if (officerInfo.badgeNumber && officerInfo.badgeNumber !== "Unknown") {
+          setResolvedBadgeNumber(officerInfo.badgeNumber);
+          return;
+        }
+        const { db } = getFirebaseClients();
+        // Try lookup by email (requires rules to allow this query)
+        if (user?.uid) {
+          const q = query(
+            collection(db, "badgeIndex"),
+            where("uid", "==", user.uid),
+            limit(1)
+          );
+          const qs = await getDocs(q);
+          if (!qs.empty) {
+            setResolvedBadgeNumber(qs.docs[0].id);
+            return;
+          }
+        }
+      } catch {
+        // Silently ignore; keep existing value if rules block queries
+      }
+    };
+    fetchBadgeFromIndex();
+  }, [user?.uid, officerInfo.badgeNumber]);
 
   // Calculate statistics
   const totalReports = incidents.length;
@@ -110,6 +146,48 @@ export default function OfficerDashboard({
       ),
     },
     {
+      title: "Under Review",
+      value: underReviewReports,
+      change: +1,
+      color: "bg-amber-500",
+      icon: (
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 16h-1v-4h-1m1-4h.01M12 9v2m9 1a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      ),
+    },
+    {
+      title: "Resolved",
+      value: resolvedReports,
+      change: +4,
+      color: "bg-green-500",
+      icon: (
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      ),
+    },
+    {
       title: "High Priority",
       value: highPriorityReports,
       change: +2,
@@ -179,7 +257,7 @@ export default function OfficerDashboard({
               </h1>
               <p className="text-gray-600">
                 Welcome back, Officer {officerInfo.name} • Badge:{" "}
-                {officerInfo.badgeNumber}
+                {resolvedBadgeNumber}
               </p>
               <p className="text-sm text-gray-500">
                 {officerInfo.station} • {officerInfo.district}
